@@ -22,3 +22,9 @@ Thumbs.db
 *.log
 profiles/
 chrome-*/
+
+# River per-run data
+river_accounts.txt
+river_result.txt
+sms_code.txt
+probes/*.png

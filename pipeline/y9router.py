@@ -53,13 +53,14 @@ def session(cfg: Config) -> requests.Session:
     return s
 
 
-def find_node_id(cfg: Config, s: requests.Session | None = None) -> str | None:
+def find_node_id(cfg: Config, s: requests.Session | None = None,
+                 hint: str | None = None) -> str | None:
     """Provider node id whose definition points at the target base URL.
 
     Prefers the API; falls back to reading the SQLite file, which works even when
     the node list endpoint changes shape.
     """
-    hint = cfg.router_node_hint.lower()
+    hint = (hint or cfg.router_node_hint).lower()
     s = s or session(cfg)
     try:
         r = s.get(f"{cfg.router_url}/api/provider-nodes", timeout=30)
@@ -102,8 +103,14 @@ def test_connection(cfg: Config, conn_id: str) -> tuple[bool, dict]:
     return healthy, body
 
 
-def attach_all(cfg: Config, results_file: Path, replace: bool = False) -> tuple[int, int]:
-    """Attach every key in result.txt. Returns (added, skipped); raises on failure.
+def attach_all(cfg: Config, results_file: Path, replace: bool = False,
+               node_hint: str | None = None, base_url: str | None = None,
+               key_prefix: str = "") -> tuple[int, int]:
+    """Attach every key in a results file. Returns (added, skipped).
+
+    `node_hint` / `base_url` let one function serve multiple providers: the
+    CleanAPIs node and the River node are separate OpenAI-compatible provider
+    nodes in 9Router, each with its own base URL.
 
     Idempotent: a name already present is skipped unless `replace`, in which case
     the old connection is deleted first so a rotated key takes over the slot
@@ -114,6 +121,10 @@ def attach_all(cfg: Config, results_file: Path, replace: bool = False) -> tuple[
         print(f"[connect] no keys in {results_file}")
         return 0, 0
 
+    hint = (node_hint or cfg.router_node_hint).lower()
+    api_base = base_url or (cfg.base_url + "/v1")
+    prefix = key_prefix or cfg.key_prefix
+
     s = session(cfg)
     try:
         existing = {c.get("name"): c for c in list_connections(cfg)}
@@ -121,13 +132,14 @@ def attach_all(cfg: Config, results_file: Path, replace: bool = False) -> tuple[
         print(f"[connect] cannot reach 9Router at {cfg.router_url}: {exc}")
         raise
 
-    node_id = find_node_id(cfg, s)
+    node_id = find_node_id(cfg, s, hint=hint)
     if not node_id:
         raise RuntimeError(
-            "no matching provider node in 9Router — create the OpenAI-compatible "
-            f"provider (base URL containing '{cfg.router_node_hint}') once in the UI"
+            f"no provider node whose definition mentions '{hint}' — create the "
+            "OpenAI-compatible provider with that base URL once in the 9Router UI"
         )
 
+    rows = {e: a for e, a in rows.items() if (a.api_key or "").startswith(prefix)}
     print(f"[connect] node={node_id}  {len(rows)} key(s)  "
           f"{len(existing)} existing connection(s)", flush=True)
 
@@ -150,7 +162,7 @@ def attach_all(cfg: Config, results_file: Path, replace: bool = False) -> tuple[
             "provider": node_id,
             "name": acct.email,
             "apiKey": acct.api_key,
-            "baseUrl": cfg.base_url + "/v1",
+            "baseUrl": api_base,
             "defaultModel": cfg.router_provider_default_model,
         }
         p = s.post(f"{cfg.router_url}/api/providers", timeout=90, data=json.dumps(payload))

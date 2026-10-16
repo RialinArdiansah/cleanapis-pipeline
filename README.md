@@ -1,5 +1,29 @@
 # cleanapis-pipeline
 
+Create provider accounts, harvest their API keys, attach every key to
+[9Router](https://www.npmjs.com/package/9router) as one round-robin pool, and
+verify the whole chain end to end.
+
+Two providers ship here, and they face completely different walls:
+
+| Provider | Signup wall | Key format | Notes |
+|---|---|---|---|
+| **CleanAPIs** (`cleanapis.com`) | its own `/register` is broken server-side; Google OAuth is the live door | `cc_…` (51 chars) | see the evidence table below |
+| **River AI** (`console.river.ai`) | WorkOS AuthKit + Cloudflare Turnstile + **WorkOS Radar**, no signup API at all | `rv_…` | see [`RIVER.md`](RIVER.md) |
+
+```bash
+python cleanapis_pipeline.py --provider cleanapis run
+python cleanapis_pipeline.py --provider river harvest --count 3 --door email
+python cleanapis_pipeline.py --provider river verify
+```
+
+Full per-provider walkthroughs: [`README.md`](#) for CleanAPIs (below) and
+[`RIVER.md`](RIVER.md) for River — the River document is worth reading before
+touching that code, because Radar returns three different outcomes that need
+opposite responses.
+
+---
+
 Create CleanAPIs accounts with Google OAuth, harvest their `cc_…` API keys, attach
 every key to [9Router](https://www.npmjs.com/package/9router) as one round-robin
 pool, and verify the whole chain.

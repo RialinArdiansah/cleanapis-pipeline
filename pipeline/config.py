@@ -38,9 +38,44 @@ class Config:
     # --- google sign-in ---
     max_consent_rounds: int = 12
 
+    # --- River AI (console.river.ai) ---
+    river_console: str = "https://console.river.ai"
+    river_auth_host: str = "https://login.console.river.ai"
+    # AuthKit application id; public (it ships in the page) but pinned so a
+    # rotation is a one-line change.
+    river_client_id: str = "client_01M0TG5W3GBNMFS87K40PYHM98"
+    river_keys_path: str = "/keys"
+    river_key_expiry_days: int = 30
+    river_code_timeout_s: int = 180
+    river_console_timeout_s: int = 120
+    river_sms_timeout_s: int = 240
+    # Signup door: "email" avoids the Google door's Radar block; "google" skips
+    # the mailed code but is blocked outright from some IPs (see pipeline/river.py).
+    river_door: str = "email"
+    river_first_name: str = "Rina"
+    river_last_name: str = "Puspita"
+
+    # --- phone numbers (WorkOS Radar SMS challenge) ---
+    # '' disables the phone step and reports the challenge instead of solving it.
+    # '5sim'  = rented virtual number via the 5sim API (needs FIVESIM_TOKEN).
+    # 'manual' = a number you own; the arriving code is written to river_sms_file.
+    river_phone_provider: str = ""
+    river_phone_number: str = ""
+    river_sms_file: str = "sms_code.txt"
+    river_5sim_country: str = "england"
+    river_5sim_operator: str = "any"
+
+    # --- river api (inference is OpenAI-compatible) ---
+    river_api_base: str = "https://api.river.ai/v1"
+    river_key_prefix: str = "rv_"
+
+    # --- fresh inboxes per run ---
+    river_skip_existing: bool = False
+
     # --- 9router ---
     router_url: str = "http://localhost:20128"
     router_node_hint: str = "cleanapis"
+    router_river_node_hint: str = "river"
     router_provider_default_model: str = "default"
 
     # --- derived / runtime ---
