@@ -1,0 +1,24 @@
+# Secrets and per-run data — never commit these.
+accounts.txt
+result.txt
+
+# Local environment
+.env
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Scratch
+*.log
+profiles/
+chrome-*/

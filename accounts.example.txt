@@ -1,0 +1,5 @@
+# accounts.txt — one account per line, format: email|password
+# Lines starting with # are ignored.
+# This file is gitignored. Do not commit real credentials.
+#
+# contoh@gmail.com|sandi123
